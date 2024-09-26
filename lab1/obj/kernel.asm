@@ -63,12 +63,12 @@ int kern_init(void) {
 
     intr_enable();  // enable irq interrupt
     8020004a:	136000ef          	jal	ra,80200180 <intr_enable>
-    asm volatile("ebreak"); // 插入断点指令
+    asm volatile("ebreak");
     8020004e:	9002                	ebreak
     80200050:	0000                	unimp
     80200052:	0000                	unimp
 
-    asm volatile(".word 0x00000000"); // 一个无效的指令
+    asm volatile(".word 0x00000000"); 
     while (1)
     80200054:	a001                	j	80200054 <kern_init+0x4a>
 
@@ -653,7 +653,7 @@ void exception_handler(struct trapframe *tf) {
             */
             cprintf("breakpoint\n");
     80200496:	bdbff0ef          	jal	ra,80200070 <cprintf>
-            cprintf("address 0x%016llx",tf->epc);
+            cprintf("address 0x%016llx \n",tf->epc);
     8020049a:	10843583          	ld	a1,264(s0)
     8020049e:	00001517          	auipc	a0,0x1
     802004a2:	af250513          	addi	a0,a0,-1294 # 80200f90 <etext+0x58c>
