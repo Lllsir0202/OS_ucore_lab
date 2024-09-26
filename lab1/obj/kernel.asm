@@ -636,7 +636,7 @@ void exception_handler(struct trapframe *tf) {
     80200480:	04e78663          	beq	a5,a4,802004cc <exception_handler+0x5a>
     80200484:	02f76c63          	bltu	a4,a5,802004bc <exception_handler+0x4a>
     80200488:	4709                	li	a4,2
-             /* LAB1 CHALLENGE3   YOUR CODE :  */
+             /* LAB1 CHALLENGE3   YOUR CODE : 2212506 */
             /*(1)输出指令异常类型（ Illegal instruction）
              *(2)输出异常指令地址
              *(3)更新 tf->epc寄存器
@@ -646,7 +646,7 @@ void exception_handler(struct trapframe *tf) {
     8020048e:	aee50513          	addi	a0,a0,-1298 # 80200f78 <etext+0x574>
     switch (tf->cause) {
     80200492:	02e79163          	bne	a5,a4,802004b4 <exception_handler+0x42>
-            /* LAB1 CHALLLENGE3   YOUR CODE :  */
+            /* LAB1 CHALLLENGE3   YOUR CODE :2212506  */
             /*(1)输出指令异常类型（ breakpoint）
              *(2)输出异常指令地址
              *(3)更新 tf->epc寄存器
