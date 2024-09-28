@@ -7,8 +7,6 @@
 ### 练习1 理解内核启动中的程序入口操作
 内核启动时，指令la sp bootstacktop，分配栈空间，使得内核分配使用的栈空间，
 
-## 练习1：理解内核启动中的程序入口操作
-
 ### 说明指令 la sp, bootstacktop 完成了什么操作，目的是什么？
 
 la指令，即load address，将一个地址加载到前面的寄存器中,而sp为栈指针，即，此指令将栈指针移动到指定位置。此处，加载的地址为bootstacktop。使用lab0.5中方法进行调试，运行此条指令后，使用`info register`查看得sp的值为`sp             0x80203000       0x80203000 <SBI_CONSOLE_PUTCHAR>`。
