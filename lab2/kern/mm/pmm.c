@@ -35,6 +35,7 @@ static void check_alloc_page(void);
 // init_pmm_manager - initialize a pmm_manager instance
 static void init_pmm_manager(void) {
     pmm_manager = &best_fit_pmm_manager;
+    //pmm_manager = &default_pmm_manager;
     cprintf("memory management: %s\n", pmm_manager->name);
     pmm_manager->init();
 }
@@ -91,22 +92,29 @@ static void page_init(void) {
     cprintf("  memory: 0x%016lx, [0x%016lx, 0x%016lx].\n", mem_size, mem_begin,
             mem_end - 1);
 
+    //这一步骤得到的应该是虚拟地址的结束位置？
+    //似乎不对
     uint64_t maxpa = mem_end;
 
+    //？？这里有什么作用，把物理地址和虚拟地址进行比较？
+    //将最后的位置设为内核的最后结束地址
     if (maxpa > KERNTOP) {
         maxpa = KERNTOP;
     }
 
     extern char end[];
 
+    //这里得到了内核使用的总页数 + nbase
     npage = maxpa / PGSIZE;
-    //kernel在end[]结束, pages是剩下的页的开始
+    //kernel在end[]结束, pages是剩下的页的开始，且记录的是虚拟地址
+    //注意这里的pages实际上得到的是end之前的所有地址
     pages = (struct Page *)ROUNDUP((void *)end, PGSIZE);
 
     for (size_t i = 0; i < npage - nbase; i++) {
         SetPageReserved(pages + i);
     }
-
+    
+    //pages其实是end之前的pages地址，加上内核使用的总页面数*sizeof(page)
     uintptr_t freemem = PADDR((uintptr_t)pages + sizeof(struct Page) * (npage - nbase));
 
     mem_begin = ROUNDUP(freemem, PGSIZE);
