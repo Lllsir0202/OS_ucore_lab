@@ -227,6 +227,42 @@ basic_check(void) {
     free_page(p1);
     free_page(p2);
 }
+// 依托default页分配方法实现slub
+struct memblock {
+    struct Page* p; // 头page
+    list_entry_t lis_block; //链表用，to_struct(lis,memblock,lis_block)以获取结构体指针
+    list_entry_t lis_slub;//链接空slub们
+    int size;//单小块的size
+};
+
+struct slub{//返回的分配内存信息
+    struct memblock* blockhead; // 所在block
+    int size; //此slub大小
+    int start;//相对所在block起始位置的起始字节数
+    list_entry_t slub_link;//空slub中的链接项
+};
+list_entry_t blocks; //已经分配blocks列表
+
+static void slub_init(void){//此方法的init入口
+    default_init();
+    list_init(&blocks);
+}
+
+//对一个已经分配的页块，将其构造成memblock并初始化其slub
+//传入的memblock应当有正确的page，此处n为字节数
+static void slub_init_mem(struct memblock* base,int size){ 
+    //链入blocks，理论上按照size从小到大排列，此处简化掉了
+    list_add(&free_list, &(base->lis_block));
+    //赋值size
+    base->size=size;
+    int bytes_total=base->p->property*4096;//一页4096B，计算总的byte数目
+    //初始化其中slub，直接爆切成对应的块数，并全部链接
+    for(int i=0;i<bytes_total;i+=size){
+        
+    }
+
+
+}
 
 // LAB2: below code is used to check the first fit allocation algorithm
 // NOTICE: You SHOULD NOT CHANGE basic_check, default_check functions!
