@@ -18,6 +18,8 @@
 #define KSTACKPAGE          2                           // # of pages in kernel stack
 #define KSTACKSIZE          (KSTACKPAGE * PGSIZE)       // sizeof kernel stack
 
+#define MAX_ORDER           10
+
 #ifndef __ASSEMBLER__
 
 #include <defs.h>
@@ -54,12 +56,11 @@ struct Page {
 #define le2page(le, member)                 \
     to_struct((le), struct Page, member)
 
-/* free_area_t - maintains a doubly linked list to record free (unused) pages */
 typedef struct {
-    list_entry_t free_list;         // the list header
-    unsigned int nr_free;           // number of free pages in this free list
-} free_area_t;
-
+    unsigned int max_order;
+    list_entry_t free_list[MAX_ORDER + 1];         // the list header
+    unsigned int nr_free;                           // number of free pages in this free list
+} free_buddy_t;
 #endif /* !__ASSEMBLER__ */
 
 #endif /* !__KERN_MM_MEMLAYOUT_H__ */
