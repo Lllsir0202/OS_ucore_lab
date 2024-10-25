@@ -5,6 +5,8 @@
 #include <buddy_system_pmm.h>
 #include <stdio.h>
 
+//buddy system的实现在th_the_moon分支。
+
 struct buddy2_t{
     unsigned size;  //记录内存总共的大小
     unsigned longest[35000];   //表明所对应的内存块的空闲单位
