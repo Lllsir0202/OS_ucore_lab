@@ -8,7 +8,7 @@ V       := @
 GCCPREFIX := riscv64-unknown-elf-
 
 ifndef QEMU
-QEMU := qemu-system-riscv64
+QEMU := ../qemu-system-riscv64
 endif
 
 ifndef SPIKE
@@ -162,11 +162,12 @@ TARGETS: $(TARGETS)
 .PHONY: qemu spike
 qemu: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 #	$(V)$(QEMU) -kernel $(UCOREIMG) -nographic
-	$(V)$(QEMU) \
+		$(V)$(QEMU) \
 		-machine virt \
 		-nographic \
 		-bios default \
 		-device loader,file=$(UCOREIMG),addr=0x80200000
+
 
 debug: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) \

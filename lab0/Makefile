@@ -10,7 +10,7 @@ GCCPREFIX := riscv64-unknown-elf-
 #endif
 
 ifndef QEMU
-QEMU := qemu-system-riscv64
+QEMU := ../qemu-system-riscv64
 endif
 
 
@@ -29,7 +29,7 @@ GDB		:= $(GCCPREFIX)gdb
 CC		:= $(GCCPREFIX)gcc
 CFLAGS  := -mcmodel=medany -std=gnu99 -Wno-unused -Werror
 CFLAGS	+= -fno-builtin -Wall -O2 -nostdinc $(DEFS)
-CFLAGS	+= -fno-stack-protector -ffunction-sections -fdata-sections
+CFLAGS	+= -#	$(V)$(QEMU) -kernel $(UCOREIMG) -nographicfno-stack-protector -ffunction-sections -fdata-sections
 CFLAGS	+= -g
 CTYPE	:= c S
 
@@ -49,7 +49,7 @@ SED		:= sed
 SH		:= sh
 TR		:= tr
 TOUCH	:= touch -c
-
+#	$(V)$(QEMU) -kernel $(UCOREIMG) -nographic
 OBJDIR	:= obj
 BINDIR	:= bin
 
@@ -156,14 +156,15 @@ TARGETS: $(TARGETS)
 
 .DEFAULT_GOAL := TARGETS
 
-.PHONY: qemu 
+.PHONY: qemu
 qemu: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
-#	$(V)$(QEMU) -kernel $(UCOREIMG) -nographic
 	$(V)$(QEMU) \
 		-machine virt \
 		-nographic \
 		-bios default \
 		-device loader,file=$(UCOREIMG),addr=0x80200000
+
+#	$(V)$(QEMU) -kernel $(UCOREIMG) -nographic
 
 debug: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 	$(V)$(QEMU) \
