@@ -1,3 +1,4 @@
+#include "buddy_system_pmm.h"
 #include <default_pmm.h>
 #include <best_fit_pmm.h>
 #include <defs.h>
@@ -95,28 +96,29 @@ static void page_init(void) {
     //这一步骤得到的应该是虚拟地址的结束位置？
     //似乎不对
     uint64_t maxpa = mem_end;
-
+    //cprintf("maxpa is 0x%016lx \n", maxpa);
     //？？这里有什么作用，把物理地址和虚拟地址进行比较？
     //将最后的位置设为内核的最后结束地址
     if (maxpa > KERNTOP) {
         maxpa = KERNTOP;
     }
-
+    //输出之后发现这里确实没有啥用
+    //cprintf("maxpa now is 0x%016lx and KERNTOP is 0x%16lx", maxpa,KERNTOP);
     extern char end[];
-
+    //cprintf("end() at 0x%016lx", end);
     //这里得到了内核使用的总页数 + nbase
     npage = maxpa / PGSIZE;
     //kernel在end[]结束, pages是剩下的页的开始，且记录的是虚拟地址
-    //注意这里的pages实际上得到的是end之前的所有地址
+    //注意这里的pages实际上得到的是end之前的所有地址,为虚拟地址
     pages = (struct Page *)ROUNDUP((void *)end, PGSIZE);
 
     for (size_t i = 0; i < npage - nbase; i++) {
         SetPageReserved(pages + i);
     }
-    
-    //pages其实是end之前的pages地址，加上内核使用的总页面数*sizeof(page)
+    //cprintf("pages begins at 0x%016lx\n",pages);
+    //pages其实是end之前的pages地址，加上内核使用的总页面数*sizeof(page)，为虚拟地址,得到了开始地址
     uintptr_t freemem = PADDR((uintptr_t)pages + sizeof(struct Page) * (npage - nbase));
-
+    //cprintf("freemem begin at 0x%016lx\n", freemem);
     mem_begin = ROUNDUP(freemem, PGSIZE);
     mem_end = ROUNDDOWN(mem_end, PGSIZE);
     if (freemem < mem_end) {
