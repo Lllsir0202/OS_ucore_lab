@@ -112,15 +112,19 @@ void interrupt_handler(struct trapframe *tf) {
              *(3)当计数器加到100的时候，我们会输出一个`100ticks`表示我们触发了100次时钟中断，同时打印次数（num）加一
             * (4)判断打印次数，当打印次数为10时，调用<sbi.h>中的关机函数关机
             */
+            //设置下一次中断为1000000次时钟中断后，即大约1s输出一次100ticks
             clock_set_next_event();
+
+            //计数器加一
             ticks++;
-            if(ticks==TICK_NUM){
+
+            //调用print
+            if(ticks % TICK_NUM == 0){
                 print_ticks();
-                num++;
-                ticks=0;
-                if(num==10){
-                    sbi_shutdown();
-                }
+            }
+
+            if(ticks == 1000){
+                sbi_shutdown();
             }
 
             break;
@@ -161,9 +165,14 @@ void exception_handler(struct trapframe *tf) {
              *(2)输出异常指令地址
              *(3)更新 tf->epc寄存器
             */
-            cprintf("Illegal instruction\n");
-            cprintf("address 0x%016llx \n",tf->epc);
-            tf->epc+=2;//因为有2字节的指令跟四字节的指令，所以加2，反正错了会中断又加2
+            //输出指令异常类型
+            cprintf("Instruction Exception: Illegal instruction\n");
+            
+            //输出异常指令地址
+            cprintf("at 0x%08x \n",tf->epc);
+
+            //更新tf->epc
+            tf->epc = tf->epc + 2;
 
             break;
         case CAUSE_BREAKPOINT:
@@ -173,9 +182,15 @@ void exception_handler(struct trapframe *tf) {
              *(2)输出异常指令地址
              *(3)更新 tf->epc寄存器
             */
-            cprintf("breakpoint\n");
-            cprintf("address 0x%016llx \n",tf->epc);
-            tf->epc+=2;
+            //输出指令异常类型
+            cprintf("Instruction Exception: breakpoint\n");
+            
+            //输出异常指令地址
+            cprintf("at 0x%08x \n",tf->epc);
+
+            //更新tf->epc
+            tf->epc = tf->epc + 2;
+
             break;
         case CAUSE_MISALIGNED_LOAD:
             break;
