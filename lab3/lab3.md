@@ -55,7 +55,7 @@ get_pte()函数（位于`kern/mm/pmm.c`）用于在页表中查找或创建页�
 
 ##### 设计实现过程
 
-do_pgfault系发生缺页异常时的处理函数，其功能为给未被映射的地址映射上物理页，函数原型为```int do_pgfault(struct mm_struct *mm, uint_t error_code, uintptr_t addr)```。在我们编程实现的部分，先使用```swap_in(mm,addr,&page);```将addr对应的物理页交换到内存中，并获取指向这个页的指针page。
+do_pgfault是发生缺页异常时的处理函数，其功能为给未被映射的地址映射上物理页，函数原型为```int do_pgfault(struct mm_struct *mm, uint_t error_code, uintptr_t addr)```。在我们编程实现的部分，先使用```swap_in(mm,addr,&page);```将addr对应的物理页交换到内存中，并获取指向这个页的指针page。
 
 接下来使用```page_insert(mm->pgdir,page,addr,perm);```函数将page在页表中建立映射，其中perm是访问权限，其值的设置参考了VMA的权限，当vma可写时，才设置页面的权限PTE_R | PTE_W，即可读可写。
 
@@ -85,7 +85,7 @@ struct Page {
 ```
 其中的list_entry_t page_link;与list_entry_t pra_page_link;都可看作一个page指针（计算偏移之后），而page指针实际上是一个page的物理地址，可通过page2ppn(page*)获取物理页号，这实际上就是页目录项和页表项中实际存储的核心数据。
 
-此外，其中的par_vaddr存储了此page目前映射的虚拟地址，可使用此地址通过PDE和PTE索引到此page。
+此外，其中的pra_vaddr存储了此page目前映射的虚拟地址，可使用此地址通过PDE和PTE索引到此page。
 
 #### 练习4：补充完成Clock页替换算法（需要编程）
 通过之前的练习，相信大家对FIFO的页面替换算法有了更深入的了解，现在请在我们给出的框架上，填写代码，实现 Clock页替换算法（mm/swap_clock.c）。
@@ -160,7 +160,6 @@ _clock_swap_out_victim(struct mm_struct *mm, struct Page ** ptr_page, int in_tic
 #### 练习5：阅读代码和实现手册，理解页表映射方式相关知识（思考题）
 如果我们采用”一个大页“ 的页表映射方式，相比分级页表，有什么好处、优势，有什么坏处、风险？
 
-如果我们采用”一个大页“ 的页表映射方式，相比分级页表，有什么好处、优势，有什么坏处、风险？
 
 ##### 优势
 
