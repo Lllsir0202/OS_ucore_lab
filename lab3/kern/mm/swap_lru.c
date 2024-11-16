@@ -61,6 +61,7 @@ _lru_access(uintptr_t addr)
         p = list_next(p);
         if(p == head)
         {
+            cprintf("failed");
             break;
         }
         page = le2page(p, pra_page_link);
@@ -74,7 +75,8 @@ _lru_access(uintptr_t addr)
     list_del(p);
     list_add(head, entry);
     //list_del(p);
-    cprintf("page addr 0x%x\n", entry);
+    list_entry_t *ptr = head;
+
     return 0;
 }
 
