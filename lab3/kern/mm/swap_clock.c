@@ -1,3 +1,6 @@
+#include "memlayout.h"
+#include "mmu.h"
+#include "pmm.h"
 #include <defs.h>
 #include <riscv.h>
 #include <stdio.h>
@@ -33,11 +36,15 @@ list_entry_t pra_list_head, *curr_ptr;
 static int
 _clock_init_mm(struct mm_struct *mm)
 {     
-     /*LAB3 EXERCISE 4: YOUR CODE*/ 
+     /*LAB3 EXERCISE 4: 2212878*/ 
      // 初始化pra_list_head为空链表
+     list_init(&pra_list_head);
      // 初始化当前指针curr_ptr指向pra_list_head，表示当前页面替换位置为链表头
+     curr_ptr = &pra_list_head;
      // 将mm的私有成员指针指向pra_list_head，用于后续的页面替换算法操作
+     mm->sm_priv = &pra_list_head;
      //cprintf(" mm->sm_priv %x in fifo_init_mm\n",mm->sm_priv);
+     cprintf("curr_ptr 0xffffffff%08x\n",  curr_ptr);
      return 0;
 }
 /*
@@ -47,13 +54,17 @@ static int
 _clock_map_swappable(struct mm_struct *mm, uintptr_t addr, struct Page *page, int swap_in)
 {
     list_entry_t *entry=&(page->pra_page_link);
- 
+    
     assert(entry != NULL && curr_ptr != NULL);
     //record the page access situlation
-    /*LAB3 EXERCISE 4: YOUR CODE*/ 
+    /*LAB3 EXERCISE 4: 2212878*/ 
     // link the most recent arrival page at the back of the pra_list_head qeueue.
     // 将页面page插入到页面链表pra_list_head的末尾
+    list_add(curr_ptr, entry);
+    curr_ptr = entry;
     // 将页面的visited标志置为1，表示该页面已被访问
+    page->visited = 1;
+    cprintf("curr_ptr 0xffffffff%08x\n",curr_ptr);
     return 0;
 }
 /*
@@ -69,14 +80,34 @@ _clock_swap_out_victim(struct mm_struct *mm, struct Page ** ptr_page, int in_tic
      /* Select the victim */
      //(1)  unlink the  earliest arrival page in front of pra_list_head qeueue
      //(2)  set the addr of addr of this page to ptr_page
+    struct Page *page;
+    list_entry_t *p = head;
     while (1) {
-        /*LAB3 EXERCISE 4: YOUR CODE*/ 
+        /*LAB3 EXERCISE 4: 2212878*/ 
         // 编写代码
         // 遍历页面链表pra_list_head，查找最早未被访问的页面
+        p = list_next(p);
+        if(p == head)
+        {
+            p = list_next(p);
+        }
         // 获取当前页面对应的Page结构指针
+        page = le2page(p, pra_page_link);
         // 如果当前页面未被访问，则将该页面从页面链表中删除，并将该页面指针赋值给ptr_page作为换出页面
+        if(!page->visited)
+        {
+            list_del(p);
+            *ptr_page = page;
+            break;
+        }
         // 如果当前页面已被访问，则将visited标志置为0，表示该页面已被重新访问
+        else {
+            page->visited = 0;
+        }
     }
+    curr_ptr = p;
+    
+    cprintf("curr_ptr 0xffffffff%08x\n",curr_ptr);
     return 0;
 }
 static int
