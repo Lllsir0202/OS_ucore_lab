@@ -133,26 +133,19 @@ get_pid(void) {
     return last_pid;
 }
 ```
-其实这段代码处理``get_pid()``函数我们可以从循环开始看，前面的代码似乎并没有什么实际价值。我们从``repeat``后开始说明。
+首先在get_pid函数中使用``next_safe``和``last_pid``两个变量记录此函数对pid的分配情况，此两变量为静态变量，函数退出之后并不销毁，因此用来维护pid的分配状态，表示从``last_pid``到``next_safe``之间并没有其他已占用的线程号。
 
-首先这里概述下这段代码的功能，这里实现的就是对于一个进程id的获取，这里主要是基于当前已经分配的id来选择最小的进行分配，但由于我们不可能直接由小至大分配(因为某个进程(pid很大)可能时间很短，另一个进程(pid很小)但运行时间很长，那么重新分配pid显然是不可能的，或者说，pid之间会出现缺口)。这段代码就是尽可能的从小至大分配。
+因此当``++last_pid < next_safe``，可以直接返回自增后的``last_pid``（对应控制流为第一个if处last_pid自增，不进入条件体；第二个if处检查last_pid并没有超出范围，不进入条件体，直接返回last_pid），此为情况1。
 
-首先这里得到当前已经分配的``proc_init``链表，然后我们对其进行一次遍历，在遍历过程中，如果找到了相同的pid，那么就需要将我们想要分配的pid加一，而如果这里大于``next_safe``时，那么就需要重新扫描，这时的``last_pid``为已经修改后的，再去寻找，而如果我们找到了一个比``last_pid``大的并且比``next_safe``小的pid，那么就需要去修改``next_safe``。其实举个例子来说，就是这样：
+当``++last_pid>=MAX_PID``（第一个if的条件），表示MAX_PID内的进程号已经循环过一轮，需要重新计数，因此将last_pid置为1，并``goto inside``，将``next_safe``暂且置为MAX_PID，并执行标签repeat对应的代码。repeat对应代码的作用为以当前last_pid为起点，找出下一段合法的[last_pid,next_safe]区间，此为情况2。
 
-    proc_list: 0 -> 1 -> 3 -> 5 -> 8
-    start: last_pid: MAX_PID   next_safe:  MAX_PID
-    0:               1                     MAX_PID
-    // 这里我们直接从1号开始
-    1:(into repeat)  2                     MAX_PID  (proc pid:1) 重新循环
-    2:(into repeat)  2                     MAX_PID  (proc pid:1) 
-    3:(continue)     2                     3        (proc pid:3) 更新next_safe
-    4:(continue)     2                     3        (proc pid:5)
-    5:(continue)     2                     3        (proc pid:8)
-    jmp out of loop
-    return 2
-这里就是像这样一个过程，来得到一个最小的可分配的pid。
+关于repeat标号下的代码，其具体功能实现如下：
 
-从本质上来说，这里的处理就是利用``next_safe``来不断逼近当前的``last_pid``，其记录的是已经遍历到的所有pid中大于``last_pid``中最小的一个，然后如果``last_pid``变大了，那么当其大于此前大于中最小的一个pid，那么就说明可能出现重复了，所以就需要重新循环。同时不清空``last_pid``，从而不需要再去检测前面已经检查过的，这样可以更快的得到合适的pid。
+repeat的核心功能其实实现于while中下面的else if，即从当前进程表中找出pid大于last_pid的pid最小的进程，将其pid作为next_safe，那么在接下来last_pid继续自增的过程中，在到达next_safe之前，并不会与任何已经存在的pid冲突，即我们得到了上面说的下一段合法的[last_pid,next_safe]区间。但是，这样的实现只保证了区间的右端安全，左端的last_pid是由last_pid自增越过上一个next_safe或最大边界得来的，其仍有可能与某个进程的pid冲突，因此我们有while中的第一个if，即``if (proc->pid == last_pid)``来保证这种情况出现时，我们尝试继续右移last_pid，并重新开始repeat的过程，直到区间左端也合法。
+
+当``++last_pid >= next_safe`` 并且自增后last_pid并不超过MAX_PID时，为情况三，控制流为不进入第一个if而进入第二个if，通过上面解释的repeat段代码来实现找出下一段合法的[last_pid,next_safe]区间，并返回last_pid；
+
+综上，ucore通过get_pid()函数，可以给每一个线程一个唯一的pid。当然当当前运行的进程数目等于MAX_PID时，get_pid()会陷入无限的循环，必须有进程释放后才能获取到pid。
 
 
 ### 练习3：编写proc_run 函数（需要编码）
