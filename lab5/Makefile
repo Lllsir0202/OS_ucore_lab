@@ -12,7 +12,7 @@ endif
 
 # try to infer the correct QEMU
 ifndef QEMU
-QEMU := qemu-system-riscv64
+QEMU := ../qemu-system-riscv64
 endif
 
 ifndef SPIKE
